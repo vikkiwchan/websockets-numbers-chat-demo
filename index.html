@@ -1,0 +1,46 @@
+<html>
+  <head></head>
+  <body>
+    <h1>Numbers Chat</h1>
+    <a href="#">Chat</a>
+    <ul></ul>
+    <script>
+      const ul = document.querySelector('ul');
+      const a = document.querySelector('a');
+
+      const url = window.document.location.origin.replace('http', 'ws');
+      console.log(url);
+
+      const socket = new WebSocket(url);
+
+      a.addEventListener('click', async (ev) => {
+        ev.preventDefault();
+        const response = await fetch('/', {
+          method: 'post',
+        });
+        // grab the number from server through an XHR request from '/' API post route
+        const message = await response.json();
+        console.log('a.addEventListener', message);
+        ul.innerHTML += `<li>${message.num}</li>`;
+        // after client gets the message back from the server,
+        // tell socket to send message to other sockets
+        socket.send(JSON.stringify(message));
+      });
+
+      socket.addEventListener('message', (ev) => {
+        console.log('socket.addEventListener, evData', ev.data);
+        const message = JSON.parse(ev.data);
+        console.log('socket.addEventListener', message);
+        // history come from from server side web-socket
+        // @27:27 message.history is used for a hard reload
+        if (message.history) {
+          message.history.forEach((_message) => {
+            ul.innerHTML += `<li>${_message.num}</li>`;
+          });
+        } else {
+          ul.innerHTML += `<li>${message.num}</li>`;
+        }
+      });
+    </script>
+  </body>
+</html>
